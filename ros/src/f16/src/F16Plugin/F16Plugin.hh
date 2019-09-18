@@ -124,7 +124,7 @@ namespace gazebo
     private: physics::ModelPtr model;
 
     /// \brief Control surfaces joints.
-    private: std::array<physics::JointPtr, 7> joints;
+    private: std::array<physics::JointPtr, 5> joints;
 
     /// \brief Max propeller RPM.
     private: int32_t propellerMaxRpm = 2500;
@@ -136,7 +136,7 @@ namespace gazebo
     private: common::PID propellerPID;
 
     /// \brief Position PID for the control surfaces.
-    private: std::array<common::PID, 6> controlSurfacesPID;
+    private: std::array<common::PID, 5> controlSurfacesPID;
 
     /// \brief keep track of controller update sim-time.
     private: gazebo::common::Time lastControllerUpdateTime;
