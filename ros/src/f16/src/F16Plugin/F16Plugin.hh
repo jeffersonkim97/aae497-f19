@@ -106,7 +106,7 @@ namespace gazebo
     private: static const unsigned int kRightAileron = 1;
     private: static const unsigned int kLeftElevator = 2;
     private: static const unsigned int kRightElevator = 3;
-    private: static const unsigned int kRudder       = 4;
+    private: static const unsigned int kRudder       = 5;
 
     /// \brief Pointer to the update event connection.
     private: event::ConnectionPtr updateConnection;
@@ -130,7 +130,7 @@ namespace gazebo
     private: int32_t propellerMaxRpm = 2500;
 
     /// \brief Next command to be applied to the propeller and control surfaces.
-    private: std::array<float, 7> cmds;
+    private: std::array<float, 5> cmds;
 
     /// \brief Velocity PID for the propeller.
     private: common::PID propellerPID;
