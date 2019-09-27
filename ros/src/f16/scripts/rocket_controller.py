@@ -15,10 +15,14 @@ class RocketController:
     def __init__(self):
         rospy.init_node('rocket_controller')
         self.time_last_plan = rospy.Time.now()
-        self.pub_rear_left = rospy.Publisher('/rocket/force_rear_left', Wrench, queue_size=10)
-        self.pub_rear_right = rospy.Publisher('/rocket/force_rear_right', Wrench, queue_size=10)
-        self.pub_front_left = rospy.Publisher('/rocket/force_front_left', Wrench, queue_size=10)
-        self.pub_front_right = rospy.Publisher('/rocket/force_front_right', Wrench, queue_size=10)
+
+        # Fin Torques
+        self.pub_fin1 = rospy.Publisher('/rocket/ffin1_torque', Wrench, queue_size=10)
+        self.pub_fin2 = rospy.Publisher('/rocket/fin2_torque', Wrench, queue_size=10)
+        self.pub_fin3 = rospy.Publisher('/rocket/fin3_torque', Wrench, queue_size=10)
+        self.pub_fin4 = rospy.Publisher('/rocket/fin4_torque', Wrench, queue_size=10)
+
+        # Where Rocket is
         self.sub_ground_truth = rospy.Subscriber('/rocket/ground_truth', Odometry,
                 self.control_callback)
 
