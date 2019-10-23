@@ -2,6 +2,7 @@ import casadi as ca
 import numpy as np
 import sys
 
+
 sys.path.insert(0, '../../../../../python/pyecca')
 
 import matplotlib.pyplot as plt
@@ -157,15 +158,33 @@ def rocket_equations(jit=True):
     pitch_d = 1.0
 
     euler = so3.Euler.from_mrp(r_nb) # roll, pitch, yaw
-    pitch = euler[1]
+    pitch = euler[1]    
 
     # control
     u_control = ca.SX.zeros(4)
     # these controls are just test controls to make sure the fins are working
+
+    u_control[0] = 0.1  # mass flow rate
+
+    import control
+    s = control.tf([1, 0], [0, 1])
+    H = 140*(s+50)*(s+50)/(s*(2138*s + 208.8))
+    Hd = control.tf2ss(control.c2d(H, 0.01))
+
+    theta_c = (100 - p_n[2]) * (0.01)/(v_b[2] * ca.cos(p_n[2]))
+
+    x_elev = ca.SX.sym('x_elev', 2)
+    u_elev = ca.SX.sym('u_elev', 1)
+    x_1 = ca.mtimes(Hd.A, x_elev) + ca.mtimes(Hd.B, u_elev)
+    y_elev = ca.mtimes(Hd.C, x_elev) + ca.mtimes(Hd.D, u_elev)
+
+    elev_c = (theta_c - p_n[2]) * y_elev / (0.5 * rho * v_b[2]**2)
+
     u_control[0] = 0.1  # mass flow rate
     u_control[1] = 0
-    u_control[2] = (pitch - 1)
+    u_control[2] = elev_c
     u_control[3] = 0
+    
     control = ca.Function('control', [x, p, t, dt], [u_control],
         ['x', 'p', 't', 'dt'], ['u'])
 
@@ -328,7 +347,6 @@ def gazebo_equations():
         'C_FLT_FRB': C_FLT_FRB
     }
 
-
 def code_generation():
     x = ca.SX.sym('x', 14)
     x_gz = ca.SX.sym('x_gz', 14)
@@ -487,7 +505,8 @@ def run():
     x0, p0 = rocket['initialize'](np.rad2deg(1.2))
     # m_dot, aileron, elevator, rudder
     data = simulate(rocket, x0, p0, tf=15)
-    analyze_data(data)
+    analyze_data(data)    
+
     plt.savefig('rocket.png')
     plt.show()
 
@@ -511,16 +530,7 @@ if __name__ == "__main__":
     run()
     code_generation()
 
-    x0, u0, p0 = do_trim(vt=100, gamma_deg=90, m_fuel=0.8)
-    lin = linearize()
-    import control
-    sys1 = control.ss(*lin(x0, u0, p0))
-
-    # get pitch rate from elevator
-    G = control.ss2tf(sys1[1, 2])
-    control.rlocus(G)
-    plt.show()
-
+    
     # next steps
     # pitch rate pid design, use this to control pitch angle
     # use flight path angle to control altitude
