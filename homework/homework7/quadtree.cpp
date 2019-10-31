@@ -117,7 +117,23 @@ public:
     std::list<Landmark> search(const Position &position, double radius)
     {
         std::list<Landmark> close_landmarks;
-        /* write your code here */
+        double distance_x = position.x - m_center.x;
+        double distance_y = position.y - m_center.y;
+        double distance = sqrt(distance_x*distance_x + distance_y*distance_y);
+        double rq = sqrt(2) * m_size;
+        bool overlap = (abs(distance) < (radius + rq));
+
+        if (m_size < m_resolution)
+        {
+            for(auto i:m_landmarks) close_landmarks.push_front(i);
+            return close_landmarks;
+        }
+
+        if (m_NE.get() && overlap) close_landmarks.splice(close_landmarks.end(), m_NE->search(position, radius));
+        if (m_NW.get() && overlap) close_landmarks.splice(close_landmarks.end(), m_NW->search(position, radius));
+        if (m_SE.get() && overlap) close_landmarks.splice(close_landmarks.end(), m_SE->search(position, radius));
+        if (m_SW.get() && overlap) close_landmarks.splice(close_landmarks.end(), m_SW->search(position, radius));
+
         return close_landmarks;
     }
 
