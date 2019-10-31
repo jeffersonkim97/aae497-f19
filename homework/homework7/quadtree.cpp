@@ -124,10 +124,9 @@ public:
         double rq = sqrt(2) * m_size;
         bool overlap = (abs(distance) < (radius + rq));
 
-        if (m_size < m_resolution)
+        if (m_landmarks.size() < m_resolution)
         {
-            for(auto i:m_landmarks) close_landmarks.push_back(i);
-            return close_landmarks;
+            return m_landmarks;
         }
 
         if (m_NE.get() && overlap) close_landmarks.splice(close_landmarks.end(), m_NE->search(position, radius));
@@ -162,16 +161,14 @@ int main(int argc, char const *argv[])
     srand(1234); // seed random number generator
 
     Position center{0, 0};  // center of space
-    double size = 1000;     // size of space
-    int n_landmarks = 1000; // number of landmarks
-    double search_radius = 50.0; // radius we want to find landmarks within
+    double size = 50000;     // size of space
+    int n_landmarks = 1000000; // number of landmarks
     std::list<double> resolution_track = {0};
     std::list<double> time_track = {0};
+    std::list<double> brute_track = {0};
     int num_resolution = 100;
 
-    for (double resolution = 1; resolution < num_resolution; resolution += 1) {
-        QuadTree tree(center, size, resolution);
-        // create random landmarks
+    // create random landmarks
         std::list<Landmark> landmarks;
         for (int id = 0; id < n_landmarks; id++)
         {
@@ -182,11 +179,17 @@ int main(int argc, char const *argv[])
         }
         std::cout << "created " << landmarks.size() << " landmarks" << std::endl;
 
+    for (int i = 0; i < num_resolution; i++) {
+        double resolution = pow(1.95, i) * 0.00000000000000000000000001;
+        double search_radius = 1.0; // radius we want to find landmarks within
+        QuadTree tree(center, size, resolution);
+        std::cout << "Resolution: " << resolution << std::endl;
+
         // where you are
         float x = size * 2 * (double(rand()) / RAND_MAX - 0.5);
         float y = size * 2 * (double(rand()) / RAND_MAX - 0.5);
         Position vehicle_position{x, y};
-        std::cout << "searcing at x: " << x << " y: " << y << " radius: " << search_radius << std::endl;
+        //std::cout << "searcing at x: " << x << " y: " << y << " radius: " << search_radius << std::endl;
 
         // brute force search
         std::list<Landmark> close_landmarks_brute_force;
@@ -204,16 +207,16 @@ int main(int argc, char const *argv[])
         double elapsed_brute_force_search = std::chrono::duration_cast<std::chrono::nanoseconds>(
                                                 std::chrono::high_resolution_clock::now() - start)
                                                 .count();
-        std::cout << "search landmarks brute force,\telapsed time "
-                << elapsed_brute_force_search << " ns" << std::endl;
+        //std::cout << "search landmarks brute force,\telapsed time "
+        //        << elapsed_brute_force_search << " ns" << std::endl;
         // output close landmarks
         for (auto &lm : close_landmarks_brute_force)
         {
-            std::cout << "id: " << lm.id << " x: " << lm.pos.x << " y: " << lm.pos.y << std::endl;
+            //std::cout << "id: " << lm.id << " x: " << lm.pos.x << " y: " << lm.pos.y << std::endl;
         }
 
         // insert random landmarks into quadtree
-        std::cout << "quadtree inserting landmarks";
+        //std::cout << "quadtree inserting landmarks";
         start = std::chrono::high_resolution_clock::now();
         for (auto &lm : landmarks)
         {
@@ -222,30 +225,31 @@ int main(int argc, char const *argv[])
         double elapsed_quadtree_insert = std::chrono::duration_cast<std::chrono::nanoseconds>(
                                             std::chrono::high_resolution_clock::now() - start)
                                             .count();
-        std::cout << ",\telapsed time " << elapsed_quadtree_insert << " ns" << std::endl;
+        //std::cout << ",\telapsed time " << elapsed_quadtree_insert << " ns" << std::endl;
 
         // quadtree search
 
         std::list<Landmark> close_landmarks_quadtree = tree.search(vehicle_position, search_radius);
-        std::cout << "quadtree searching";
+        //std::cout << "quadtree searching";
         start = std::chrono::high_resolution_clock::now();
         for (auto &lm : close_landmarks_quadtree)
         {
-            std::cout << "id: " << lm.id << " x: " << lm.pos.x << " y: " << lm.pos.y << std::endl;
+            //std::cout << "id: " << lm.id << " x: " << lm.pos.x << " y: " << lm.pos.y << std::endl;
         }
         double elapsed_quadtree_search = std::chrono::duration_cast<std::chrono::nanoseconds>(
                                             std::chrono::high_resolution_clock::now() - start)
                                             .count();
-        std::cout << ",\t\telapsed time " << elapsed_quadtree_search << " ns" << std::endl;
+        //std::cout << ",\t\telapsed time " << elapsed_quadtree_search << " ns" << std::endl;
 
         resolution_track.push_back(resolution);
         time_track.push_back(elapsed_quadtree_search);
+        brute_track.push_back(elapsed_brute_force_search);
     }
 
     // Output Quadtree resolution
     freopen ("quadtree_resolution.txt", "w", stdout);
     std::list<double>::iterator resol = resolution_track.begin();
-    for (int i = 0; i < num_resolution-1; i++)
+    for (int i = 0; i < num_resolution; i++)
     {
         std::advance(resol, 1);
         std::cout << *resol << std::endl;
@@ -255,10 +259,19 @@ int main(int argc, char const *argv[])
     // Output Quadtree time elapsed
     freopen ("quadtree_time.txt", "w", stdout); // Open txtfile for output stream
     std::list<double>::iterator tim = time_track.begin();
-    for (int i = 0; i < num_resolution-1; i++)
+    for (int i = 0; i < num_resolution; i++)
     {
         std::advance(tim, 1);
         std::cout << *tim << std::endl;
+    }
+    fclose(stdout);
+
+    freopen ("quadtree_brute.txt", "w", stdout); // Open txtfile for output stream
+    std::list<double>::iterator timb = brute_track.begin();
+    for (int i = 0; i < num_resolution; i++)
+    {
+        std::advance(timb, 1);
+        std::cout << *timb << std::endl;
     }
     fclose(stdout);
 
