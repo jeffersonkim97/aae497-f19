@@ -87,7 +87,7 @@ module airframe() {
         elevator_cut(1);
         mirror([0, 1, 0]) elevator_cut(1);
         rudder_cut();
-        translate([-4.5, 0, 0.5]) cube([2, 0.8, 2], center=true); // cockpit
+        translate([-4.5, 1, 0.5]) cube([2, 0.8, 2], center=true); // cockpit
     }
 }
 
