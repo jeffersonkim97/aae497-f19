@@ -9,33 +9,31 @@ import matplotlib.pyplot as plt
 import pyecca.lie.so3 as so3
 from pyecca.util import rk4
 
-
-def u_to_fin(u):
-    ail = u[1]
-    elv = u[2]
-    rdr = u[3]
-    # top, left, down right
-    return ca.vertcat(ail - rdr, ail - elv, ail + rdr, ail + elv)
- 
-
-def rocket_equations(jit=True):
-    x = ca.SX.sym('x', 14)
-    u = ca.SX.sym('u', 4)
+def tiltrotor_equations(jit=True):
+    x = ca.SX.sym('x', 6)
+    u = ca.SX.sym('u', 8)
     p = ca.SX.sym('p', 16)
     t = ca.SX.sym('t')
     dt = ca.SX.sym('dt')
 
     # State: x
     # body frame: Forward, Right, Down
-    omega_b = x[0:3]  # inertial angular velocity expressed in body frame
-    r_nb = x[3:7]  # modified rodrigues parameters
-    v_b = x[7:10]  # inertial velocity expressed in body components
-    p_n = x[10:13]  # positon in nav frame
-    m_fuel = x[13]  # mass
+    VT = x[0]
+    alpha = x[1]
+    theta = x[2]
+    Q = x[3]
+    H = x[4]
+    pos = x[5]
     
     # Input: u
-    m_dot = ca.if_else(m_fuel > 0, u[0], 0)
-    fin = u_to_fin(u)
+    LT = u[0] # Left Thrust
+    RT = u[1] # Right Thrust
+    BT = u[2] # Back Thrust
+    ail = u[3]
+    elv = u[4]
+    rdr = u[5]
+    Ltilt = u[6]] # Left motor tilt angle
+    Rtilt = u[7] # Right motor tilt angle
     
     # Parameters: p
     g = p[0]  # gravity
